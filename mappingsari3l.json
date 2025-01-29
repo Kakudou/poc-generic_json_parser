@@ -1,0 +1,31 @@
+{
+  "jq_root": " .[][] |",
+  "identity": {
+    "name": ".owner?.login",
+    "role": ".owner?.type",
+    "external_references": {
+      "source_name": (".owner?.login", lambda x: "GitHub"),
+      "description": ".owner?.login",
+      "url": ".owner?.html_url"
+    }
+  },
+  "vulnerability": {
+    "name": (".name",
+        lambda cve: (
+            __import__('re').search(r'CVE-\d{4}-\d+', cve).group()
+            if
+                __import__('re').search(r'CVE-\d{4}-\d+', cve)
+            else
+                None
+        )
+    ),
+    "external_references": {
+        "source_name": (".url", lambda x: "GitHub"),
+        "description": ".description",
+        "url": ".html_url"
+    },
+    "note": {
+      "content": ("[.name, .html_url, .owner?.login]", lambda x: f"PoC {x[0]} found at {x[1]}, by {x[2]}"),
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+    "jq_root": ".[] | (.new[]?, .updated[]?) |",
+   "vulnerability": {
+         "name": ".cveId",
+         "external_references": {
+             "source_name": (".cveId", lambda x: "url"),
+             "url": ".cveOrgLink"
+         },
+   }
+}
