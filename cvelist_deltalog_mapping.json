@@ -5,6 +5,6 @@
          "external_references": {
              "source_name": (".cveId", lambda x: "url"),
              "url": ".cveOrgLink"
-         },
+         }
    }
 }

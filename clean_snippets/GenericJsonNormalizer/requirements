@@ -1,0 +1,11 @@
+# Requirements file
+jq
+
+# Dev Tools
+flake8
+autopep8
+pynvim
+pytest-bdd
+black
+pre-commit
+pytest-order

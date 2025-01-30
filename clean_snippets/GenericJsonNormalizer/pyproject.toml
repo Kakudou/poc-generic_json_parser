@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "GenericJsonNormalizer"
+authors = [
+  {name = "Kakudou ~ カクドウ", email = "contact@kakudou.org"},
+]
+description = "GenericJsonNormalizer is a Python-based CLI Tool for normalizing input JSON data into a desired output Json following a mapping schema, and applying some light reformating on it using lambda. The principle idea, is to have a quick way to normalized and transformed any json input in a more suitable and useable format."
+requires-python = ">=3.13"
+keywords = ["json", "json-normalizer", "json-transformer", "json-formatter", "json-reformatter", "json-normalization", "json-transformation", "json-formatting", "json-reformatting", "json-normalize", "json-transform", "json-format", "json-reformat", "json-normalize-tool", "json-transform-tool", "json-format-tool", "json-reformat-tool", "json-normalize-tooling", "json-transform-tooling", "json-format-tooling", "json-reformat-tooling", "json-normalize-framework", "json-transform-framework", "json-format-framework", "json-reformat-framework", "json-normalize-automation", "json-transform-automation", "json-format-automation", "json-reformat-automation", "json-normalize-integration", "json-transform-integration", "json-format-integration", "json-reformat-integration"]
+license = {text = "MIT"}
+classifiers = [
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3.13",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "Software Development :: Libraries :: Python Modules",
+        "Software Architecture :: Clean-Architecture",
+        "Software Development :: BDD",
+        "Software Development :: TDD",
+        "Tools :: JSON Normalizer",
+        "Tools :: JSON Transformer",
+]
+dependencies = ["jq"]
+dynamic = ["version", "readme"]
+
+[project.optional-dependencies]
+dev = ["flake8",
+       "black",
+       "pre-commit",
+       "pynvim",
+       "pytest-bdd",
+       "pytest-order"]
+
+[project.scripts]
+GenericJsonNormalizer = "generic_json_normalizer.__main__:generic_json_normalizer"
+
+[tool.setuptools.dynamic]
+version = {attr = "generic_json_normalizer.src.VERSION"}
+readme = {file = ["README.md"]}
+
+[tool.black]
+line-length = 79
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''

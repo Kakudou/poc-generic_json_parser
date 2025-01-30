@@ -25,7 +25,7 @@
         "url": ".html_url"
     },
     "note": {
-      "content": ("[.name, .html_url, .owner?.login]", lambda x: f"PoC {x[0]} found at {x[1]}, by {x[2]}"),
+      "content": ("[.name, .html_url, .owner?.login]", lambda x: f"PoC for {x[0]} found at {x[1]}, by {x[2]}"),
     }
   }
 }

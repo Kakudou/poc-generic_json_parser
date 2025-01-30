@@ -18,46 +18,45 @@ def load_json_and_mapping(json_file_path, mapping_file_path):
 
 def extract_lambda_functions_from_mapping(mapping_data):
     """
-    Extract transformation functions (lambdas) from the mapping data.
+    Extract transformation functions (lambdas) from the mapping data using a generator.
     """
-    lambda_functions = set()
-
     def recursive_extraction(mapping_dictionary, parent_key=""):
         for key, value in mapping_dictionary.items():
             if isinstance(value, tuple):
                 composite_key = f"{parent_key}§{key}"
-                lambda_functions.add((composite_key, value[1]))  # Store transformation function
+                yield (composite_key, value[1])  # Yield transformation function
             elif isinstance(value, dict):
-                recursive_extraction(value, key)
+                yield from recursive_extraction(value, key)
 
-    recursive_extraction(mapping_data)
-    return lambda_functions
+    return recursive_extraction(mapping_data)
 
 
-def apply_lambda_functions_to_data(json_data, lambda_functions):
+def apply_lambda_functions_to_data(json_data, mapping):
     """
-    Apply extracted lambda functions to the corresponding JSON fields.
+    Apply extracted lambda functions to the corresponding JSON fields using a generator for recursive application.
     """
-    def recursive_application(json_data, target_object_key, target_field_key, transformation_function):
-        for json_entry in json_data:
-            if isinstance(json_entry, dict):
-                if target_object_key in json_entry:
-                    json_entry[target_object_key][target_field_key] = transformation_function(
-                        json_entry[target_object_key].get(target_field_key, None)
+    def recursive_application(json_entry, target_object_key, target_field_key, transformation_function):
+        if isinstance(json_entry, dict):
+            if target_object_key in json_entry:
+                target_object = json_entry[target_object_key]
+                if isinstance(target_object, dict):
+                    # Apply transformation to the target field directly
+                    target_object[target_field_key] = transformation_function(
+                        target_object.get(target_field_key, None)
                     )
-                else:
-                    for sub_entry in json_entry.values():
-                        if isinstance(sub_entry, dict) and target_object_key in sub_entry:
-                            sub_entry[target_object_key][target_field_key] = transformation_function(
-                                sub_entry[target_object_key].get(target_field_key, None)
-                            )
+            # Avoid unnecessary nested checks by directly traversing sub-entries if needed
+            else:
+                for sub_entry in json_entry.values():
+                    if isinstance(sub_entry, dict):
+                        recursive_application(sub_entry, target_object_key, target_field_key, transformation_function)
 
-    for composite_key, transformation_function in lambda_functions:
+
+    for composite_key, transformation_function in extract_lambda_functions_from_mapping(mapping):
         target_object_key, target_field_key = composite_key.split("§")  # Extract object and field names
-        recursive_application(json_data, target_object_key, target_field_key, transformation_function)
+        for json_entry in json_data:
+            recursive_application(json_entry, target_object_key, target_field_key, transformation_function)
 
     return json_data
-
 
 def build_jq_output_template(mapping_template, jq_root_path=""):
     """
@@ -78,7 +77,6 @@ def build_jq_output_template(mapping_template, jq_root_path=""):
 
     return ", ".join(jq_output_parts), jq_root_path
 
-
 def contains_null_values(json_object):
     """
     Check if the given JSON object contains null values.
@@ -88,7 +86,6 @@ def contains_null_values(json_object):
     elif isinstance(json_object, list):
         return any(contains_null_values(item) for item in json_object)
     return json_object is None
-
 
 def normalize_json_data(json_data, mapping_data):
     """
@@ -105,19 +102,24 @@ def normalize_json_data(json_data, mapping_data):
         '.[][] | walk(select(. != {} and . != null and . != "null"))'
     ).input(jq_transformed_data).all()
 
-    lambda_functions = extract_lambda_functions_from_mapping(mapping_data)
-    final_transformed_data = apply_lambda_functions_to_data(filtered_json_data, lambda_functions)
+    final_transformed_data = apply_lambda_functions_to_data(filtered_json_data, mapping_data)
 
     return [entry for entry in final_transformed_data if not contains_null_values(entry)]
 
+def main_routine(json_file_path, mapping_file_path):
+    json_data, mapping_data = load_json_and_mapping(json_file_path, mapping_file_path)
+    normalized_json_data = normalize_json_data(json_data, mapping_data)
+    return normalized_json_data
 
 if __name__ == "__main__":
     argument_parser = argparse.ArgumentParser()
     argument_parser.add_argument("--json", required=True, help="Path to JSON file")
     argument_parser.add_argument("--mapping", required=True, help="Path to mapping file")
+
     parsed_arguments = argument_parser.parse_args()
 
-    json_data, mapping_data = load_json_and_mapping(parsed_arguments.json, parsed_arguments.mapping)
-    normalized_json_data = normalize_json_data(json_data, mapping_data)
-    print(json.dumps(normalized_json_data, indent=2))
+
+    result = main_routine(parsed_arguments.json, parsed_arguments.mapping)
+    print(json.dumps(result, indent=2))
+
 
